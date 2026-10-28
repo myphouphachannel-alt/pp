@@ -1,0 +1,181 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile with display name and banking details for payment receiving",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "photoURL": { "type": "string" },
+        "bankName": { "type": "string", "maxLength": 100 },
+        "bankAccountNumber": { "type": "string", "maxLength": 100 },
+        "bankAccountName": { "type": "string", "maxLength": 100 },
+        "qrCodeUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "displayName"]
+    },
+    "Group": {
+      "title": "Expense Group",
+      "description": "Group of friends sharing expenses",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 300 },
+        "ownerId": { "type": "string" },
+        "inviteCode": { "type": "string", "maxLength": 32 },
+        "memberCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "ownerId", "inviteCode"]
+    },
+    "GroupMember": {
+      "title": "Group Member",
+      "description": "Membership mapping between users and groups",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "groupId": { "type": "string" },
+        "userId": { "type": "string" },
+        "role": { "type": "string", "enum": ["owner", "member"] },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "photoURL": { "type": "string" },
+        "email": { "type": "string" },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "groupId", "userId", "role", "displayName"]
+    },
+    "Expense": {
+      "title": "Expense Record",
+      "description": "Group expense with breakdown and payer info",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "groupId": { "type": "string" },
+        "title": { "type": "string", "maxLength": 150 },
+        "restaurantName": { "type": "string", "maxLength": 150 },
+        "date": { "type": "string" },
+        "payerId": { "type": "string" },
+        "payerName": { "type": "string", "maxLength": 100 },
+        "totalAmount": { "type": "number" },
+        "foodTotal": { "type": "number" },
+        "sharedTotal": { "type": "number" },
+        "receiptUrl": { "type": "string" },
+        "notes": { "type": "string", "maxLength": 500 },
+        "splitType": { "type": "string", "enum": ["itemized", "equal", "custom"] },
+        "memberShares": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "groupId", "title", "payerId", "totalAmount", "createdBy"]
+    },
+    "ExpenseItem": {
+      "title": "Expense Line Item",
+      "description": "Individual food or beverage line item on a bill",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "expenseId": { "type": "string" },
+        "groupId": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "price": { "type": "number" },
+        "quantity": { "type": "number" },
+        "assignedMemberIds": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "expenseId", "groupId", "name", "price", "quantity"]
+    },
+    "Settlement": {
+      "title": "Debt Settlement",
+      "description": "Repayment record between two group members",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "groupId": { "type": "string" },
+        "fromUserId": { "type": "string" },
+        "fromUserName": { "type": "string", "maxLength": 100 },
+        "toUserId": { "type": "string" },
+        "toUserName": { "type": "string", "maxLength": 100 },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "awaiting_confirmation", "paid"] },
+        "proofUrl": { "type": "string" },
+        "note": { "type": "string", "maxLength": 300 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "paidAt": { "type": "string", "format": "date-time" },
+        "confirmedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "groupId", "fromUserId", "toUserId", "amount", "status"]
+    },
+    "Notification": {
+      "title": "User Notification",
+      "description": "In-app alerts for expense additions and payment requests",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string", "maxLength": 150 },
+        "message": { "type": "string", "maxLength": 300 },
+        "type": { "type": "string", "enum": ["expense_added", "payment_sent", "payment_confirmed", "group_invite"] },
+        "link": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "message", "type", "isRead"]
+    },
+    "Invitation": {
+      "title": "Group Invitation",
+      "description": "Sharable invitation code link for joining groups",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "groupId": { "type": "string" },
+        "groupName": { "type": "string", "maxLength": 100 },
+        "inviteCode": { "type": "string", "maxLength": 32 },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "groupId", "inviteCode", "createdBy"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile with display name and banking info"
+    },
+    "/groups/{groupId}": {
+      "schema": { "$ref": "#/entities/Group" },
+      "description": "Friend groups sharing expenses"
+    },
+    "/groupMembers/{membershipId}": {
+      "schema": { "$ref": "#/entities/GroupMember" },
+      "description": "Membership junction collection"
+    },
+    "/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "Expenses with bill split breakdown"
+    },
+    "/expenseItems/{itemId}": {
+      "schema": { "$ref": "#/entities/ExpenseItem" },
+      "description": "Individual line items for an expense"
+    },
+    "/settlements/{settlementId}": {
+      "schema": { "$ref": "#/entities/Settlement" },
+      "description": "Debt settlement and payment status"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "User notifications"
+    },
+    "/invitations/{inviteCode}": {
+      "schema": { "$ref": "#/entities/Invitation" },
+      "description": "Sharable group invitation codes"
+    }
+  }
+}
