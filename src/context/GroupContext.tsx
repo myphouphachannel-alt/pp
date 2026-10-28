@@ -64,6 +64,7 @@ interface GroupContextType {
     note?: string
   ) => Promise<string>;
   confirmPaymentReceived: (settlementId: string) => Promise<void>;
+  addMemberByName: (displayName: string) => Promise<GroupMember>;
   removeMemberFromGroup: (memberUserId: string) => Promise<void>;
   getMemberProfile: (userId: string) => Promise<UserProfile | null>;
   copyInviteLink: () => string;
@@ -557,6 +558,51 @@ export function GroupProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Add friend directly by name (without invite link)
+  const addMemberByName = async (displayName: string): Promise<GroupMember> => {
+    if (!currentUser || !activeGroup) throw new Error('ບໍ່ມີກຸ່ມທີ່ເລືອກ');
+    const cleanName = displayName.trim();
+    if (!cleanName) throw new Error('ກະລຸນາປ້ອນຊື່ໝູ່');
+
+    const memberCustomId = 'mem_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+    const membershipId = `${activeGroup.id}_${memberCustomId}`;
+    const now = new Date().toISOString();
+
+    const newMember: GroupMember = {
+      id: membershipId,
+      groupId: activeGroup.id,
+      userId: memberCustomId,
+      role: 'member',
+      displayName: cleanName,
+      photoURL: `https://api.dicebear.com/7.x/bottts/svg?seed=${cleanName}`,
+      joinedAt: now,
+    };
+
+    const path = `groupMembers/${membershipId}`;
+    try {
+      await setDoc(doc(db, 'groupMembers', membershipId), newMember);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.CREATE, path);
+    }
+
+    // Increment member count on group
+    try {
+      const gDoc = await getDoc(doc(db, 'groups', activeGroup.id));
+      if (gDoc.exists()) {
+        const count = (gDoc.data().memberCount || members.length) + 1;
+        await updateDoc(doc(db, 'groups', activeGroup.id), {
+          memberCount: count,
+          updatedAt: now,
+        });
+      }
+    } catch (e) {
+      console.warn('Could not increment member count:', e);
+    }
+
+    setMembers((prev) => [...prev, newMember]);
+    return newMember;
+  };
+
   // Remove member from group (Owner action)
   const removeMemberFromGroup = async (memberUserId: string) => {
     if (!currentUser || !activeGroup) return;
@@ -615,6 +661,7 @@ export function GroupProvider({ children }: { children: React.ReactNode }) {
         deleteExpense,
         createSettlementPayment,
         confirmPaymentReceived,
+        addMemberByName,
         removeMemberFromGroup,
         getMemberProfile,
         copyInviteLink,

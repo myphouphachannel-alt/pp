@@ -16,6 +16,7 @@ import {
   MessageCircle,
   ExternalLink,
   Sparkles,
+  UserPlus,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
@@ -36,6 +37,7 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
     activeGroup,
     setActiveGroupId,
     members,
+    addMemberByName,
     removeMemberFromGroup,
     copyInviteLink,
   } = useGroup();
@@ -43,6 +45,30 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
   const [copied, setCopied] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<GroupMember | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
+
+  // Direct add friend state
+  const [directFriendName, setDirectFriendName] = useState('');
+  const [isAddingDirect, setIsAddingDirect] = useState(false);
+  const [directAddError, setDirectAddError] = useState('');
+  const [directAddSuccess, setDirectAddSuccess] = useState('');
+
+  const handleAddDirectFriend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!directFriendName.trim()) return;
+    setIsAddingDirect(true);
+    setDirectAddError('');
+    setDirectAddSuccess('');
+    try {
+      await addMemberByName(directFriendName.trim());
+      setDirectAddSuccess(`ເພີ່ມ "${directFriendName.trim()}" ເຂົ້າກຸ່ມສຳເລັດແລ້ວ!`);
+      setDirectFriendName('');
+      setTimeout(() => setDirectAddSuccess(''), 3000);
+    } catch (err: any) {
+      setDirectAddError(err.message || 'ເກີດຂໍ້ຜິດພາດ');
+    } finally {
+      setIsAddingDirect(false);
+    }
+  };
 
   const inviteLink = copyInviteLink();
 
@@ -234,6 +260,47 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
                   </p>
                 </div>
               </div>
+
+              {/* Add friend directly by name (ບໍ່ຜ່ານການເຊີນ) */}
+              <form
+                onSubmit={handleAddDirectFriend}
+                className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50/80 to-teal-50/60 border border-emerald-200/80 space-y-2.5"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                    <UserPlus className="w-4 h-4 text-emerald-600" />
+                    ເພີ່ມຊື່ໝູ່ໃສ່ກຸ່ມໂດຍກົງ (ບໍ່ຕ້ອງເຊີນ)
+                  </span>
+                  <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-100 px-2 py-0.5 rounded-full">
+                    ໝູ່ບໍ່ຈຳເປັນຕ້ອງມີບັນຊີ
+                  </span>
+                </div>
+
+                {directAddError && (
+                  <p className="text-xs text-red-600">{directAddError}</p>
+                )}
+                {directAddSuccess && (
+                  <p className="text-xs text-emerald-700 font-semibold">{directAddSuccess}</p>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={directFriendName}
+                    onChange={(e) => setDirectFriendName(e.target.value)}
+                    placeholder="ປ້ອນຊື່ໝູ່ ເຊັ່ນ: ສົມສັກ, ບຸນມີ, ນາງ ນ້ອຍ..."
+                    className="flex-1 px-3.5 py-2 text-xs rounded-xl border border-emerald-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isAddingDirect || !directFriendName.trim()}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{isAddingDirect ? 'ກຳລັງເພີ່ມ...' : 'ເພີ່ມເຂົ້າກຸ່ມ'}</span>
+                  </button>
+                </div>
+              </form>
 
               <div className="divide-y divide-slate-100">
                 {members.map((member) => {

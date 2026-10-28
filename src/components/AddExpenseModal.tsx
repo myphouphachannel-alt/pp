@@ -17,6 +17,7 @@ import {
   AlertCircle,
   Check,
   Sparkles,
+  UserPlus,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
@@ -38,7 +39,7 @@ interface TempLineItem {
 
 export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClose }) => {
   const { currentUser, userProfile } = useAuth();
-  const { members, activeGroup, addExpense } = useGroup();
+  const { members, activeGroup, addExpense, addMemberByName } = useGroup();
 
   const [title, setTitle] = useState('');
   const [restaurantName, setRestaurantName] = useState('');
@@ -49,6 +50,32 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Quick add friend by name
+  const [showAddFriendInput, setShowAddFriendInput] = useState(false);
+  const [quickFriendName, setQuickFriendName] = useState('');
+  const [isAddingFriend, setIsAddingFriend] = useState(false);
+
+  const handleQuickAddFriend = async () => {
+    if (!quickFriendName.trim()) return;
+    setIsAddingFriend(true);
+    try {
+      const newMem = await addMemberByName(quickFriendName.trim());
+      setQuickFriendName('');
+      setShowAddFriendInput(false);
+      // Auto-assign new friend to all existing line items
+      setItems((prev) =>
+        prev.map((item) => ({
+          ...item,
+          assignedMemberIds: [...item.assignedMemberIds, newMem.userId],
+        }))
+      );
+    } catch (e: any) {
+      setErrorMsg(e.message || 'ເກີດຂໍ້ຜິດພາດໃນການເພີ່ມຊື່ໝູ່');
+    } finally {
+      setIsAddingFriend(false);
+    }
+  };
 
   // Default initial line item
   const [items, setItems] = useState<TempLineItem[]>(() => [
@@ -360,6 +387,51 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                   + ເບຍລາວ
                 </button>
               </div>
+            </div>
+
+            {/* Quick Add Friend By Name */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200/80">
+              <span className="text-xs text-emerald-950 font-medium flex items-center gap-1.5">
+                <UserPlus className="w-3.5 h-3.5 text-emerald-600" />
+                ມີໝູ່ກິນນຳແຕ່ຍັງບໍ່ມີຊື່ໃນກຸ່ມບໍ? (ເພີ່ມໄດ້ເລີຍບໍ່ຕ້ອງເຊີນ)
+              </span>
+
+              {showAddFriendInput ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={quickFriendName}
+                    onChange={(e) => setQuickFriendName(e.target.value)}
+                    placeholder="ປ້ອນຊື່ໝູ່..."
+                    className="px-2.5 py-1 text-xs rounded-lg border border-emerald-300 bg-white focus:outline-none"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={handleQuickAddFriend}
+                    disabled={isAddingFriend || !quickFriendName.trim()}
+                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold disabled:opacity-50"
+                  >
+                    {isAddingFriend ? '...' : '+ ເພີ່ມ'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddFriendInput(false)}
+                    className="p-1 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowAddFriendInput(true)}
+                  className="self-start sm:self-auto px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1 shadow-2xs"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>+ ເພີ່ມຊື່ໝູ່ໃສ່ບິນ</span>
+                </button>
+              )}
             </div>
 
             {/* Line Items List */}
