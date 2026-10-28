@@ -14,6 +14,7 @@ import {
   AlertCircle,
   ExternalLink,
   Users,
+  Edit3,
 } from 'lucide-react';
 import { Expense } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -23,9 +24,10 @@ import { formatLAK } from '../utils/currency';
 interface ExpenseDetailModalProps {
   expense: Expense | null;
   onClose: () => void;
+  onEdit?: (expense: Expense) => void;
 }
 
-export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({ expense, onClose }) => {
+export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({ expense, onClose, onEdit }) => {
   const { currentUser } = useAuth();
   const { members, activeGroup, deleteExpense } = useGroup();
 
@@ -172,9 +174,20 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({ expense,
             </div>
           )}
 
-          {/* Delete confirmation section */}
+          {/* Edit and Delete section */}
           {canDelete && (
-            <div className="pt-2 border-t border-slate-100">
+            <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  onClose();
+                  onEdit?.(expense);
+                }}
+                className="w-full py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-emerald-200"
+              >
+                <Edit3 className="w-4 h-4 text-emerald-600" />
+                ແກ້ໄຂລາຍຈ່າຍນີ້
+              </button>
+
               {showConfirmDelete ? (
                 <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 space-y-2">
                   <p className="text-xs text-red-800 font-medium">

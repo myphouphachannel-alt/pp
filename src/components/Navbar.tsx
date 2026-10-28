@@ -22,6 +22,7 @@ import { useGroup } from '../context/GroupContext';
 interface NavbarProps {
   onOpenCreateGroup: () => void;
   onOpenJoinGroup: () => void;
+  onOpenQrModal?: () => void;
   onNavigateTab: (tab: 'dashboard' | 'expenses' | 'settlements' | 'groups' | 'profile') => void;
   activeTab: string;
 }
@@ -29,6 +30,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenCreateGroup,
   onOpenJoinGroup,
+  onOpenQrModal,
   onNavigateTab,
   activeTab,
 }) => {
@@ -192,10 +194,21 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Header Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {currentUser && (
+              <button
+                onClick={onOpenQrModal}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors border border-emerald-200"
+                title="ຕັ້ງຄ່າ QR Code ຮັບເງິນ BCEL One"
+              >
+                <QrCode className="w-3.5 h-3.5" />
+                <span>QR ຮັບເງິນ</span>
+              </button>
+            )}
+
             {activeGroup && (
               <button
                 onClick={handleCopyLink}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors border border-emerald-200"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
                 title="ຄັດລອກລິ້ງເຊີນໝູ່ເຂົ້າກຸ່ມ"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
@@ -245,9 +258,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <button
                       onClick={() => {
                         setProfileDropdownOpen(false);
+                        onOpenQrModal?.();
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
+                    >
+                      <QrCode className="w-4 h-4 text-emerald-600" />
+                      QR Code ຮັບເງິນຂອງຂ້ອຍ
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
                         onNavigateTab('profile');
                       }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
                     >
                       <UserIcon className="w-4 h-4 text-slate-400" />
                       ແກ້ໄຂໂປຣໄຟລ໌ & ບັນຊີ

@@ -14,6 +14,7 @@ import {
   User,
   ArrowUpDown,
   Utensils,
+  Edit3,
 } from 'lucide-react';
 import { useGroup } from '../context/GroupContext';
 import { useAuth } from '../context/AuthContext';
@@ -23,11 +24,13 @@ import { Expense } from '../types';
 interface ExpensesViewProps {
   onOpenAddExpense: () => void;
   onSelectExpense: (expense: Expense) => void;
+  onEditExpense?: (expense: Expense) => void;
 }
 
 export const ExpensesView: React.FC<ExpensesViewProps> = ({
   onOpenAddExpense,
   onSelectExpense,
+  onEditExpense,
 }) => {
   const { expenses, activeGroup, members } = useGroup();
   const { currentUser } = useAuth();
@@ -185,10 +188,25 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                       <Utensils className="w-3 h-3" />
                       {exp.restaurantName}
                     </span>
-                    <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(exp.date).toLocaleDateString('lo-LA')}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(exp.date).toLocaleDateString('lo-LA')}
+                      </span>
+                      {onEditExpense && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditExpense(exp);
+                          }}
+                          className="p-1 rounded-md text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                          title="ແກ້ໄຂລາຍຈ່າຍ"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <h3 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-1 mb-1">

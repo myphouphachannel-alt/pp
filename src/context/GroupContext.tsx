@@ -49,6 +49,12 @@ interface GroupContextType {
     expenseData: Omit<Expense, 'id' | 'createdAt' | 'groupId' | 'createdBy'>,
     lineItems: Array<{ name: string; price: number; quantity: number; assignedMemberIds: string[] }>
   ) => Promise<string>;
+  updateExpense: (
+    expenseId: string,
+    expenseData: Partial<Expense>,
+    lineItems?: Array<{ name: string; price: number; quantity: number; assignedMemberIds: string[] }>
+  ) => Promise<void>;
+  getExpenseItems: (expenseId: string) => Promise<ExpenseItem[]>;
   deleteExpense: (expenseId: string) => Promise<void>;
   createSettlementPayment: (
     toUserId: string,
@@ -419,6 +425,69 @@ export function GroupProvider({ children }: { children: React.ReactNode }) {
     return expenseId;
   };
 
+  // Update existing expense
+  const updateExpense = async (
+    expenseId: string,
+    expenseData: Partial<Expense>,
+    lineItems?: Array<{ name: string; price: number; quantity: number; assignedMemberIds: string[] }>
+  ): Promise<void> => {
+    if (!currentUser || !activeGroup) throw new Error('ບໍ່ມີກຸ່ມທີ່ເລືອກ');
+
+    const expPath = `expenses/${expenseId}`;
+    const now = new Date().toISOString();
+
+    const updatedData = {
+      ...expenseData,
+      updatedAt: now,
+    };
+
+    try {
+      await updateDoc(doc(db, 'expenses', expenseId), updatedData);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, expPath);
+    }
+
+    if (lineItems && lineItems.length > 0) {
+      try {
+        const itemsQ = query(collection(db, 'expenseItems'), where('expenseId', '==', expenseId));
+        const itemSnaps = await getDocs(itemsQ);
+        for (const itemDoc of itemSnaps.docs) {
+          await deleteDoc(doc(db, 'expenseItems', itemDoc.id));
+        }
+
+        for (const item of lineItems) {
+          const itemId = 'item_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+          const itemPath = `expenseItems/${itemId}`;
+          const fullItem: ExpenseItem = {
+            id: itemId,
+            expenseId,
+            groupId: activeGroup.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            assignedMemberIds: item.assignedMemberIds,
+            createdAt: now,
+          };
+          await setDoc(doc(db, 'expenseItems', itemId), fullItem);
+        }
+      } catch (err) {
+        console.warn('Could not update line items:', err);
+      }
+    }
+  };
+
+  // Fetch expense line items
+  const getExpenseItems = async (expenseId: string): Promise<ExpenseItem[]> => {
+    try {
+      const q = query(collection(db, 'expenseItems'), where('expenseId', '==', expenseId));
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() } as ExpenseItem));
+    } catch (e) {
+      console.warn('Could not fetch items:', e);
+      return [];
+    }
+  };
+
   // Delete expense
   const deleteExpense = async (expenseId: string) => {
     if (!currentUser) return;
@@ -541,6 +610,8 @@ export function GroupProvider({ children }: { children: React.ReactNode }) {
         createGroup,
         joinGroupByCode,
         addExpense,
+        updateExpense,
+        getExpenseItems,
         deleteExpense,
         createSettlementPayment,
         confirmPaymentReceived,

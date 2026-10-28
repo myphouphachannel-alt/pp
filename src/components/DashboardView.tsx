@@ -18,6 +18,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Share2,
+  QrCode,
+  Edit3,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
@@ -29,6 +31,8 @@ interface DashboardViewProps {
   onOpenInvite: () => void;
   onNavigateTab: (tab: 'dashboard' | 'expenses' | 'settlements' | 'groups' | 'profile') => void;
   onSelectExpense: (expense: Expense) => void;
+  onEditExpense: (expense: Expense) => void;
+  onOpenQrModal: () => void;
   onPayDebt: (debt: any) => void;
 }
 
@@ -37,6 +41,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenInvite,
   onNavigateTab,
   onSelectExpense,
+  onEditExpense,
+  onOpenQrModal,
   onPayDebt,
 }) => {
   const { currentUser, userProfile } = useAuth();
@@ -147,6 +153,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               ເພີ່ມລາຍຈ່າຍ
             </button>
             <button
+              onClick={onOpenQrModal}
+              className="px-4 py-2.5 rounded-xl bg-emerald-600/70 hover:bg-emerald-600 text-white font-medium text-sm transition-all flex items-center gap-2 border border-emerald-400/30"
+              title="ຕັ້ງຄ່າ QR Code ຮັບເງິນ"
+            >
+              <QrCode className="w-4 h-4 text-emerald-200" />
+              QR Code ຂອງຂ້ອຍ
+            </button>
+            <button
               onClick={onOpenInvite}
               className="px-4 py-2.5 rounded-xl bg-emerald-600/70 hover:bg-emerald-600 text-white font-medium text-sm transition-all flex items-center gap-2 border border-emerald-400/30"
             >
@@ -163,6 +177,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* QR Code Setup Banner if not configured yet */}
+      {!userProfile?.qrCodeUrl && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-amber-50 border border-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <QrCode className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-900">
+                ເພີ່ມ QR Code ບັນຊີທະນາຄານຂອງທ່ານ
+              </h4>
+              <p className="text-xs text-slate-600 mt-0.5">
+                ອັບໂຫຼດຮູບ BCEL One / OnePay QR ເພື່ອໃຫ້ໝູ່ສະແກນໂອນເງິນຄືນໄດ້ທັນທີ ໂດຍບໍ່ຕ້ອງຖາມເລກບັນຊີ
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onOpenQrModal}
+            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/20 shrink-0 flex items-center gap-1.5"
+          >
+            <QrCode className="w-3.5 h-3.5" />
+            <span>+ ເພີ່ມ QR Code ດຽວນີ້</span>
+          </button>
+        </div>
+      )}
 
       {/* Fintech Summary Cards (5 Key Metrics) */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4">
@@ -414,13 +454,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </div>
                     </div>
 
-                    <div className="text-right shrink-0">
-                      <span className="text-sm font-bold text-slate-900 block">
-                        {formatLAK(exp.totalAmount)}
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        {new Date(exp.date).toLocaleDateString('lo-LA')}
-                      </span>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right shrink-0">
+                        <span className="text-sm font-bold text-slate-900 block">
+                          {formatLAK(exp.totalAmount)}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {new Date(exp.date).toLocaleDateString('lo-LA')}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditExpense(exp);
+                        }}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-700 hover:bg-emerald-100 transition-colors"
+                        title="ແກ້ໄຂລາຍຈ່າຍ"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 ))}

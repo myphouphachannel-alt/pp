@@ -14,9 +14,11 @@ import { SettlementsView } from './components/SettlementsView';
 import { GroupsView } from './components/GroupsView';
 import { ProfileView } from './components/ProfileView';
 import { AddExpenseModal } from './components/AddExpenseModal';
+import { EditExpenseModal } from './components/EditExpenseModal';
 import { ExpenseDetailModal } from './components/ExpenseDetailModal';
 import { CreateGroupModal } from './components/CreateGroupModal';
 import { JoinGroupModal } from './components/JoinGroupModal';
+import { BankQrModal } from './components/BankQrModal';
 import { AuthModal } from './components/AuthModal';
 import { Expense, DebtTransfer } from './types';
 import {
@@ -46,6 +48,8 @@ function MainApp() {
 
   // Modals state
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const [isJoinGroupOpen, setIsJoinGroupOpen] = useState(false);
@@ -208,6 +212,7 @@ function MainApp() {
       <Navbar
         onOpenCreateGroup={() => setIsCreateGroupOpen(true)}
         onOpenJoinGroup={() => setIsJoinGroupOpen(true)}
+        onOpenQrModal={() => setIsQrModalOpen(true)}
         onNavigateTab={(tab) => setActiveTab(tab)}
         activeTab={activeTab}
       />
@@ -259,6 +264,8 @@ function MainApp() {
                 onOpenInvite={() => setActiveTab('groups')}
                 onNavigateTab={(tab) => setActiveTab(tab)}
                 onSelectExpense={(exp) => setSelectedExpense(exp)}
+                onEditExpense={(exp) => setEditingExpense(exp)}
+                onOpenQrModal={() => setIsQrModalOpen(true)}
                 onPayDebt={(debt) => {
                   setInitialPaymentDebt(debt);
                   setActiveTab('settlements');
@@ -270,6 +277,7 @@ function MainApp() {
               <ExpensesView
                 onOpenAddExpense={() => setIsAddExpenseOpen(true)}
                 onSelectExpense={(exp) => setSelectedExpense(exp)}
+                onEditExpense={(exp) => setEditingExpense(exp)}
               />
             )}
 
@@ -305,9 +313,26 @@ function MainApp() {
         onClose={() => setIsAddExpenseOpen(false)}
       />
 
+      <EditExpenseModal
+        expense={editingExpense}
+        isOpen={!!editingExpense}
+        onClose={() => setEditingExpense(null)}
+        onUpdated={(updated) => {
+          if (selectedExpense?.id === updated.id) {
+            setSelectedExpense(updated);
+          }
+        }}
+      />
+
       <ExpenseDetailModal
         expense={selectedExpense}
         onClose={() => setSelectedExpense(null)}
+        onEdit={(exp) => setEditingExpense(exp)}
+      />
+
+      <BankQrModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
       />
 
       <CreateGroupModal
